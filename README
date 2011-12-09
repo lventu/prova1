@@ -10,3 +10,8 @@ The gaussian noise is created from the Box-Muller algotithm, easy to implement. 
 No channel coding is applied, so the code rate in my system is 1. I have supposed Es normalized to 1 to simplify calc.
 
 the channel rate is calculate from shannon theory. 
+
+The program generates a stream of 8388608 bit, converts them into 4-constellation symbol and add awgn noise. 
+the baseband decoder is a maximum likelihood decoder, in a very simple form.
+
+bit rate/symbol rate is not important, no CR and no SSR (we are in baseband)
