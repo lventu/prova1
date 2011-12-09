@@ -1,0 +1,12 @@
+Basic QPSK Modulation
+
+M = 4 (k=2)
+
+Language C/C++
+
+Performance calculation of BER in AWGN channel.
+The gaussian noise is created from the Box-Muller algotithm, easy to implement. This algorithm start from 2 Uniform variable and obtain a gaussian distibution (with the personalization of mean and standard deviation).
+
+No channel coding is applied, so the code rate in my system is 1. I have supposed Es normalized to 1 to simplify calc.
+
+the channel rate is calculate from shannon theory. 
