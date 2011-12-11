@@ -89,43 +89,61 @@ int _tmain(int argc, _TCHAR* argv[])
 	bool stop_ok = true;
 	do{
 		do{
-			//procedura generazione simboli complessi semplificata
-			for(int k=0; k<SYM_LENGTH; k++){ // kernel A, proverò a lanciarlo con <<1,SYM_LENGTH>> e via via aumentare la capacità dei pacchetti
-				// generazione coppia di bit casuale e conversione in base 10
-				int sym_tmp = ((int)(2*random()))*2+((int)(2*random())); //la funzione random sarà una __device__
-				int sym_map = mapping[sym_tmp]; // l'array di mapping sarà nella constant memory
-				out[k] = std::complex<float>(K*(float)cos(sym_map*PI/M_idx), K*(float)sin(sym_map*PI/M_idx)); // ritornerà un puntatore all'array
-				//cout<<"symbol: "<<out[k]<<endl;
- 			}
-
-			//parte eventuale di aggiunta rumore AWGN
-			for(int i=0; i<SYM_LENGTH;i++){
-				float a_1 = (float)EbNo_dB/10;
-				float a = (float)sqrt(1.0/(2.0*2.0*pow(10,a_1)));//pow(10.0,(EbNo_dB/10))));
-				float g1 = (float)sqrt(2.0)*(float)randn_notrig(0.0,a);
-				float g2 = (float)sqrt(2.0)*(float)randn_notrig(0.0,a);
-				out_noise[i] = std::complex<float>(real(out[i])+g1, imag(out[i])+g2);
-				//cout<<"sym+noise compl: "<<out_noise[i]<<endl;
-			}
-
-			//uscita definitiva g(t)*(coseno*cos(w0*t)+seno*sin(w0*t))
-			// non abbiamo portante, cosideriamo la banda base
-			//immagino la trasmissione di simboli complessi
-			for(int i=0; i<SYM_LENGTH; i++){
-				ricevuti[i] = ML_receiver(i);
-				//cout<<i<<" symbol ric: "<<ricevuti[i]<<endl;
-			}
-			//error check
-			int err=0;
-			for(int i=0; i<SYM_LENGTH; i++){
-				if((real<float>(ricevuti[i])!=real<float>(out[i]))||(imag<float>(ricevuti[i])!=imag<float>(out[i]))){
-					err++;
-				}
-			}
-			// calcolo della SER non la BER!!!
-			double a =(((double)err)/((double)SYM_LENGTH));
-			cout<<"SNR	"<<EbNo_dB<<"			"<<err<<"/"<<SYM_LENGTH<<"		"<<a<<endl;
-			EbNo_dB +=1;
+	//inizializzazione dei dati casuali
+	for(int i=0; i<DATA_LENGTH;i++){
+		data_input[i] = (int)(2*random());
+		//cout<<"ingresso: "<<data_input[i]<<endl;
+	}
+	float dt;
+	//inizializzazione array base ortonormale --il passaggio per ora è inutile
+	//for(int i=0; i<SYM_LENGTH; i++){
+	//	dt=0;
+	//	for(int k=0; k<1000; k++){
+	//		out2[i][k]=std::complex<float>((float)cos(2*PI*50*dt),(float)sin(2*PI*50*dt));
+	//		dt = dt + 0.001;
+	//	}	
+	//}
+	//creazione simboli
+	for(int i=0,k=0; i<DATA_LENGTH; i=i+2,k++){
+		symbol_input[k] = data_input[i+1]*2+data_input[i];
+		//cout<<"symbol: "<<symbol_input[k]<<endl;
+	}
+	//applico la codifica
+	for(int i=0; i<SYM_LENGTH; i++){
+		symbol_input[i] = mapping[symbol_input[i]];
+		//cout<<"symbol cod: "<<symbol_input[i]<<endl;
+	}
+	//simbolo complesso, espresso tramite la costellazione dei simboli
+	for(int i=0; i<SYM_LENGTH;i++){
+		out[i] = std::complex<float>(K*(float)cos(symbol_input[i]*PI/M_idx), K*(float)sin(symbol_input[i]*PI/M_idx));
+		//cout<<i<<" symbol compl: "<<out[i]<<endl;
+	}
+	//parte eventuale di aggiunta rumore AWGN
+	for(int i=0; i<SYM_LENGTH;i++){
+		float a_1 = (float)EbNo_dB/10;
+		float a = (float)sqrt(1.0/(2.0*2.0*pow(10,a_1)));//pow(10.0,(EbNo_dB/10))));
+		float g1 = (float)sqrt(2.0)*(float)randn_notrig(0.0,a);
+		float g2 = (float)sqrt(2.0)*(float)randn_notrig(0.0,a);
+		out_noise[i] = std::complex<float>(real(out[i])+g1, imag(out[i])+g2);
+		//cout<<"sym+noise compl: "<<out_noise[i]<<endl;
+	}
+	//uscita definitiva g(t)*(coseno*cos(w0*t)+seno*sin(w0*t))
+	// non abbiamo portante, cosideriamo la banda base
+	//trascuriamo perciò il CR
+	for(int i=0; i<SYM_LENGTH; i++){
+		ricevuti[i] = ML_receiver(i);
+		//cout<<i<<" symbol ric: "<<ricevuti[i]<<endl;
+	}
+	//error check
+	int err=0;
+	for(int i=0; i<SYM_LENGTH; i++){
+		if((real<float>(ricevuti[i])!=real<float>(out[i]))||(imag<float>(ricevuti[i])!=imag<float>(out[i]))){
+			err++;
+		}
+	}
+	double a =(((double)err)/((double)SYM_LENGTH));
+	cout<<"SNR	"<<EbNo_dB<<"			"<<err<<"/"<<SYM_LENGTH<<"		"<<a<<endl;
+	EbNo_dB +=1;
 	
 		}while(EbNo_dB<11);
 		EbNo_dB=-5;
