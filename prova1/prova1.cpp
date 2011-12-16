@@ -18,7 +18,7 @@ using namespace std;
 
 #define M_idx 4
 #define m_bit 2
-#define DATA_LENGTH 4096*4096
+#define DATA_LENGTH 1024*1024
 #define SYM_LENGTH DATA_LENGTH/m_bit
 #define Rb 10			// bit rate
 #define Rs Rb/m_bit		// symbol rate
@@ -37,7 +37,7 @@ complex<float> ricevuti[SYM_LENGTH];
 //costanti
 const int mapping[M_idx] = {-3,-1,3,1};
 const float psk_I[M_idx] = {(float)cos(-3*PI/M_idx),(float)cos(-1*PI/M_idx),(float)cos(3*PI/M_idx),(float)cos(1*PI/M_idx)};
-const double psk_Q[M_idx] = {(float)sin(-3*PI/M_idx),(float)sin(-1*PI/M_idx),(float)sin(3*PI/M_idx),(float)sin(1*PI/M_idx)};
+const float psk_Q[M_idx] = {(float)sin(-3*PI/M_idx),(float)sin(-1*PI/M_idx),(float)sin(3*PI/M_idx),(float)sin(1*PI/M_idx)};
 
 float random(){
 	srand(rand()*cos((double)rand())*(int)time(NULL));
@@ -93,8 +93,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			for(int k=0; k<SYM_LENGTH; k++){ // kernel A, proverò a lanciarlo con <<1,SYM_LENGTH>> e via via aumentare la capacità dei pacchetti
 				// generazione coppia di bit casuale e conversione in base 10
 				int sym_tmp = ((int)(2*random()))*2+((int)(2*random())); //la funzione random sarà una __device__
-				int sym_map = mapping[sym_tmp]; // l'array di mapping sarà nella constant memory
-				out[k] = std::complex<float>(K*(float)cos(sym_map*PI/M_idx), K*(float)sin(sym_map*PI/M_idx)); // ritornerà un puntatore all'array
+				//int sym_map = mapping[sym_tmp]; // l'array di mapping sarà nella constant memory
+				out[k] = std::complex<float>(K*psk_I[sym_tmp], K*psk_Q[sym_tmp]);
+				//out[k] = std::complex<float>(K*(float)cos(sym_map*PI/M_idx), K*(float)sin(sym_map*PI/M_idx)); // ritornerà un puntatore all'array
 				//cout<<"symbol: "<<out[k]<<endl;
  			}
 
@@ -123,7 +124,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				}
 			}
 			// calcolo della SER non la BER!!!
-			double a =(((double)err)/((double)SYM_LENGTH));
+			double a =(((double)err)/(2*(double)SYM_LENGTH));
 			cout<<"SNR	"<<EbNo_dB<<"			"<<err<<"/"<<SYM_LENGTH<<"		"<<a<<endl;
 			EbNo_dB +=1;
 	
