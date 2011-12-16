@@ -124,7 +124,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				}
 			}
 			// calcolo della SER non la BER!!!
-			double a =(((double)err)/(2*(double)SYM_LENGTH));
+			double a =(((double)err)/((double)SYM_LENGTH));
 			cout<<"SNR	"<<EbNo_dB<<"			"<<err<<"/"<<SYM_LENGTH<<"		"<<a<<endl;
 			EbNo_dB +=1;
 	
